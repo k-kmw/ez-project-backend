@@ -33,7 +33,7 @@ public class AuthService {
 
         Member member = Member.builder()
                 .userId(joinDTO.getUserId())
-                .password(joinDTO.getPassword())
+                .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
                 .username(joinDTO.getUsername())
                 .email(joinDTO.getEmail())
                 .build();
