@@ -1,5 +1,6 @@
 package com.youngcha.ez.global.security.config;
 
+import com.youngcha.ez.global.security.jwt.JwtFilter;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.global.security.jwt.LoginFilter;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
+
+        http
+                .addFilterBefore(new JwtFilter(jwtUtil),LoginFilter.class);
 
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
