@@ -6,8 +6,6 @@ import com.youngcha.ez.member.domain.repository.MemberRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-
 @Service
 public class AuthService {
 
@@ -36,6 +34,7 @@ public class AuthService {
                 .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
                 .username(joinDTO.getUsername())
                 .email(joinDTO.getEmail())
+                .role("ROLE_USER")
                 .build();
 
         memberRepository.save(member);

@@ -15,6 +15,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     public LoginFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
+        setFilterProcessesUrl("/auth/login");
         setUsernameParameter("userId");
     }
 
@@ -23,6 +24,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String userId = obtainUsername(request);
         String password = obtainPassword(request);
+
+        System.out.println(userId);
+        System.out.println(password);
 
         // username과 password를 검증하기 위해 token에 담기
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, password);
@@ -34,10 +38,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
+        System.out.println("success");
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
+        System.out.println("fail");
     }
 }
