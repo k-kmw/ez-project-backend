@@ -72,11 +72,22 @@ public class AuthController {
 
         // make new JWT
         String newAccessToken = jwtUtil.createJwt("access", userId, role, 10*60*1000L);
+        String newRefreshToken = jwtUtil.createJwt("refresh", userId, role, 24*60*60*1000L);
         String newAuthorization = "Bearer " + newAccessToken;
 
-
         response.setHeader("Authorization", newAuthorization);
+        response.addCookie(createCookie("refresh", newRefreshToken));
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private Cookie createCookie(String key, String value) {
+
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(24*60*60);
+//        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+
+        return cookie;
     }
 }
