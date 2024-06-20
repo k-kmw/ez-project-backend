@@ -2,6 +2,7 @@ package com.youngcha.ez.global.security.jwt;
 
 import com.youngcha.ez.global.security.dto.MemberDetails;
 import com.youngcha.ez.member.domain.entity.Member;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -30,35 +32,53 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(authorization == null || !authorization.startsWith("Bearer ")) {
 
-            System.out.println("token이 존재하지 않음");
+            System.out.println("access token이 존재하지 않음");
             filterChain.doFilter(request, response);
 
             return;
         }
 
-        String token = authorization.split(" ")[1];
+        String accessToken = authorization.split(" ")[1];
 
-        if(jwtUtil.isExpired(token)) {
-
-            System.out.println("token 기간 만료");
-            filterChain.doFilter(request,response);
+        if(accessToken == null) {
+            filterChain.doFilter(request, response);
 
             return;
         }
 
-        String userId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token);
+        try {
+            jwtUtil.isExpired(accessToken);
+        } catch (ExpiredJwtException e) {
+
+            PrintWriter writer = response.getWriter();
+            writer.print("access token expired");
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        
+        // access token인지 확인
+        String type = jwtUtil.getType(accessToken);
+        if(!type.equals("access")) {
+
+            PrintWriter writer = response.getWriter();
+            writer.print("Invalid access token");
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        String userId = jwtUtil.getUserId(accessToken);
+        String role = jwtUtil.getRole(accessToken);
 
         Member member = Member.builder()
                 .userId(userId)
                 .password("temppassword")
                 .role(role)
                 .build();
-
         MemberDetails memberDetails = new MemberDetails(member);
 
         Authentication authToken  = new UsernamePasswordAuthenticationToken(memberDetails, null, memberDetails.getAuthorities());
-
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request,response);
