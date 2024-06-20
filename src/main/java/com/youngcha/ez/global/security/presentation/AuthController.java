@@ -23,13 +23,9 @@ import java.util.Date;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
+    public AuthController(AuthService authService) {
         this.authService = authService;
-        this.jwtUtil = jwtUtil;
-        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @PostMapping("/join")
@@ -43,6 +39,44 @@ public class AuthController {
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
         // get refresh token
+        String refreshToken = getRefreshToken(request);
+
+        if(refreshToken == null) {
+            return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
+        }
+
+        // expired check
+        if (authService.isTokenExpired(refreshToken)) {
+            return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
+        }
+
+        // 토큰이 refresh인지 check
+        if (!authService.isRefreshToken(refreshToken)) {
+            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+        }
+
+        // DB에 저장된 토큰인지 확인
+        if (!authService.isTokenInDB(refreshToken)) {
+            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+        }
+
+        // make new JWT
+        String newAccessToken = authService.rotateJwt("access", refreshToken, 10*60*1000L);
+        String newRefreshToken = authService.rotateJwt("refresh", refreshToken, 24*60*60*1000L);
+
+        // DB에 기존 refresh 토큰 삭제 후 새 refresh 토큰 저장
+        authService.deleteRefreshToken(refreshToken);
+        authService.addRefreshToken(newRefreshToken);
+
+        // 응답 설정
+        response.setHeader("Authorization", "Bearer " + newAccessToken);
+        response.addCookie(createCookie("refresh", newRefreshToken));
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private String getRefreshToken(HttpServletRequest request) {
+
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         for(Cookie cookie : cookies) {
@@ -53,50 +87,7 @@ public class AuthController {
             }
         }
 
-        if(refreshToken == null) {
-
-            return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
-        }
-
-        // expired check
-        try {
-            jwtUtil.isExpired(refreshToken);
-        } catch (ExpiredJwtException e) {
-
-            return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
-        }
-
-        // 토큰이 refresh인지 check
-        String type = jwtUtil.getType(refreshToken);
-        if(!type.equals("refresh")) {
-
-            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
-        }
-        
-        // DB에 저장된 토큰인지 확인
-        Boolean isExist = refreshTokenRepository.existsByTokenValue(refreshToken);
-        if(!isExist) {
-            
-            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
-        }
-
-        String userId = jwtUtil.getUserId(refreshToken);
-        String role = jwtUtil.getRole(refreshToken);
-
-        // make new JWT
-        String newAccessToken = jwtUtil.createJwt("access", userId, role, 10*60*1000L);
-        String newRefreshToken = jwtUtil.createJwt("refresh", userId, role, 24*60*60*1000L);
-        String newAuthorization = "Bearer " + newAccessToken;
-
-        // DB에 기존 refresh 토큰 삭제 후 새 refresh 토큰 저장
-        refreshTokenRepository.deleteByTokenValue(refreshToken);
-        addRefreshToken(userId, newRefreshToken, 24*60*60*1000L);
-
-        // 응답 설정
-        response.setHeader("Authorization", newAuthorization);
-        response.addCookie(createCookie("refresh", newRefreshToken));
-
-        return new ResponseEntity<>(HttpStatus.OK);
+        return refreshToken;
     }
 
     private Cookie createCookie(String key, String value) {
@@ -107,18 +98,5 @@ public class AuthController {
         cookie.setHttpOnly(true);
 
         return cookie;
-    }
-
-    private void addRefreshToken(String userId, String tokenValue, long expiredMs) {
-
-        Date expirationDate = new Date(System.currentTimeMillis() + expiredMs);
-
-        RefreshToken refreshToken = RefreshToken.builder()
-                .userId(userId)
-                .tokenValue(tokenValue)
-                .expiration(expirationDate.toString())
-                .build();
-
-        refreshTokenRepository.save(refreshToken);
     }
 }

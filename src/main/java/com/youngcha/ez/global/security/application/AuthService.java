@@ -1,20 +1,30 @@
 package com.youngcha.ez.global.security.application;
 
+import com.youngcha.ez.global.security.domain.entity.RefreshToken;
+import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthRequestDTO;
+import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.member.domain.entity.Member;
 import com.youngcha.ez.member.domain.repository.MemberRepository;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 @Service
 public class AuthService {
 
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthService(MemberRepository memberRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public AuthService(MemberRepository memberRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         this.memberRepository = memberRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public void join(AuthRequestDTO.JoinDTO joinDTO) {
@@ -38,5 +48,54 @@ public class AuthService {
                 .build();
 
         memberRepository.save(member);
+    }
+
+    public boolean isTokenExpired(String refreshToken) {
+
+        try {
+            jwtUtil.isExpired(refreshToken);
+            return false;
+        } catch (ExpiredJwtException e) {
+
+            return true;
+        }
+    }
+
+    public boolean isRefreshToken(String refreshToken) {
+
+        String type = jwtUtil.getType(refreshToken);
+        return type.equals("refresh");
+    }
+
+    public boolean isTokenInDB(String refreshToken) {
+
+        return refreshTokenRepository.existsByTokenValue(refreshToken);
+    }
+
+    public String rotateJwt(String type, String refreshToken, Long expiredMs) {
+
+        String userId = jwtUtil.getUserId(refreshToken);
+        String role = jwtUtil.getRole(refreshToken);
+
+        return jwtUtil.createJwt(type, userId, role, expiredMs);
+    }
+
+    public void deleteRefreshToken(String refreshToken) {
+
+        refreshTokenRepository.deleteByTokenValue(refreshToken);
+    }
+
+    public void addRefreshToken(String token) {
+
+        String userId = jwtUtil.getUserId(token);
+        Date expirationDate = new Date(System.currentTimeMillis() + 24*60*60*1000L);
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .userId(userId)
+                .tokenValue(token)
+                .expiration(expirationDate.toString())
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
     }
 }
