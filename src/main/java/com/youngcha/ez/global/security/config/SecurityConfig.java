@@ -4,6 +4,7 @@ import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.jwt.JwtFilter;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.global.security.jwt.LoginFilter;
+import com.youngcha.ez.global.security.jwt.CustomLogoutFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -55,6 +57,9 @@ public class SecurityConfig {
         http
                 .httpBasic((auth) -> auth.disable());
 
+        http
+                .logout((auth) -> auth.disable());
+
         // 경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
@@ -69,6 +74,9 @@ public class SecurityConfig {
 
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenRepository), UsernamePasswordAuthenticationFilter.class);
+
+        http
+                .addFilterAt(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class);
 
         // 세션 설정 (jwt 방식에서는 session을 stateless로 설정)
         http
