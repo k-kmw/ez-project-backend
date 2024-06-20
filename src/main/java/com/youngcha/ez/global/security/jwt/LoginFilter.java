@@ -22,7 +22,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-        setFilterProcessesUrl("/auth/login");
+        setFilterProcessesUrl("/user/login");
         setUsernameParameter("userId");
     }
 
