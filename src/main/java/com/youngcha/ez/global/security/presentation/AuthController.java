@@ -1,6 +1,8 @@
 package com.youngcha.ez.global.security.presentation;
 
 import com.youngcha.ez.global.security.application.AuthService;
+import com.youngcha.ez.global.security.domain.entity.RefreshToken;
+import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthRequestDTO;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -14,16 +16,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.Date;
+
 @Controller
 @RequestMapping("/user")
 public class AuthController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @PostMapping("/join")
@@ -66,6 +72,13 @@ public class AuthController {
 
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
+        
+        // DB에 저장된 토큰인지 확인
+        Boolean isExist = refreshTokenRepository.existsByTokenValue(refreshToken);
+        if(!isExist) {
+            
+            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+        }
 
         String userId = jwtUtil.getUserId(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
@@ -75,6 +88,11 @@ public class AuthController {
         String newRefreshToken = jwtUtil.createJwt("refresh", userId, role, 24*60*60*1000L);
         String newAuthorization = "Bearer " + newAccessToken;
 
+        // DB에 기존 refresh 토큰 삭제 후 새 refresh 토큰 저장
+        refreshTokenRepository.deleteByTokenValue(refreshToken);
+        addRefreshToken(userId, newRefreshToken, 24*60*60*1000L);
+
+        // 응답 설정
         response.setHeader("Authorization", newAuthorization);
         response.addCookie(createCookie("refresh", newRefreshToken));
 
@@ -89,5 +107,18 @@ public class AuthController {
         cookie.setHttpOnly(true);
 
         return cookie;
+    }
+
+    private void addRefreshToken(String userId, String tokenValue, long expiredMs) {
+
+        Date expirationDate = new Date(System.currentTimeMillis() + expiredMs);
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .userId(userId)
+                .tokenValue(tokenValue)
+                .expiration(expirationDate.toString())
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
     }
 }

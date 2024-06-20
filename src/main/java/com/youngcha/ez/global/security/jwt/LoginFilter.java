@@ -1,5 +1,7 @@
 package com.youngcha.ez.global.security.jwt;
 
+import com.youngcha.ez.global.security.domain.entity.RefreshToken;
+import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.MemberDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -14,16 +16,19 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
         setFilterProcessesUrl("/user/login");
         setUsernameParameter("userId");
     }
@@ -47,6 +52,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
+        // 유저 정보
         String userId = authentication.getName();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
@@ -54,9 +60,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
+        // token 생성
         String accessToken = jwtUtil.createJwt("access", userId, role,10*60*1000L);
         String refreshToken = jwtUtil.createJwt("refresh", userId, role, 24*60*60*1000L);
 
+        // refresh 토큰 DB 저장
+        addRefreshToken(userId, refreshToken, 24*60*60*1000L);
+
+        // 응답 설정
         response.addHeader("Authorization","Bearer " + accessToken);
         response.addCookie(createCookie("refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
@@ -76,5 +87,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         cookie.setHttpOnly(true);
 
         return cookie;
+    }
+
+    private void addRefreshToken(String userId, String tokenValue, long expiredMs) {
+
+        Date expirationDate = new Date(System.currentTimeMillis() + expiredMs);
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .userId(userId)
+                .tokenValue(tokenValue)
+                .expiration(expirationDate.toString())
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
     }
 }
