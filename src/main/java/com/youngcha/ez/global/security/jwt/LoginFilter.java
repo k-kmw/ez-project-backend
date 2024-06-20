@@ -74,5 +74,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         cookie.setMaxAge(24*60*60);
 //        cookie.setSecure(true);
         cookie.setHttpOnly(true);
+
+        return cookie;
     }
 }
