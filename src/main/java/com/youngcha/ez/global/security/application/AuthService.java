@@ -9,10 +9,12 @@ import com.youngcha.ez.member.domain.repository.MemberRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
 @Service
+@Transactional(readOnly = true)
 public class AuthService {
 
     private final MemberRepository memberRepository;
@@ -80,6 +82,7 @@ public class AuthService {
         return jwtUtil.createJwt(type, userId, role, expiredMs);
     }
 
+    @Transactional
     public void deleteRefreshToken(String refreshToken) {
 
         refreshTokenRepository.deleteByTokenValue(refreshToken);
