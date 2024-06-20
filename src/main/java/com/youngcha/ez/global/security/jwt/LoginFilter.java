@@ -2,8 +2,10 @@ package com.youngcha.ez.global.security.jwt;
 
 import com.youngcha.ez.global.security.dto.MemberDetails;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -45,24 +47,32 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
 
-        MemberDetails memberDetails = (MemberDetails) authentication.getPrincipal();
-
-        String userId = memberDetails.getUsername();
+        String userId = authentication.getName();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
-
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(userId,role,6*60*60*1000L);
+        String accessToken = jwtUtil.createJwt("access", userId, role,10*60*1000L);
+        String refreshToken = jwtUtil.createJwt("refresh", userId, role, 24*60*60*1000L);
 
-        response.addHeader("Authorization","Bearer " + token);
+        response.addHeader("Authorization","Bearer " + accessToken);
+        response.addCookie(createCookie("refresh", refreshToken));
+        response.setStatus(HttpStatus.OK.value());
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
 
         response.setStatus(401);
+    }
+
+    private Cookie createCookie(String key, String value) {
+
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(24*60*60);
+//        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
     }
 }
