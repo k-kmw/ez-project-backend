@@ -259,7 +259,7 @@ $RECYCLE.BIN/
 .gradle
 **/build/
 !src/**/build/
-application.yml
+*.yml
 
 # Ignore Gradle GUI config
 gradle-app.setting
