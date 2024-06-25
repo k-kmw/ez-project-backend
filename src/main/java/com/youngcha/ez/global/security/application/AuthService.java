@@ -29,6 +29,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
+    @Transactional
     public void join(AuthRequestDTO.JoinDTO joinDTO) {
 
         boolean isExist = memberRepository.existsByUserId(joinDTO.getUserId());
@@ -88,6 +89,7 @@ public class AuthService {
         refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 
+    @Transactional
     public void addRefreshToken(String token) {
 
         String userId = jwtUtil.getUserId(token);
