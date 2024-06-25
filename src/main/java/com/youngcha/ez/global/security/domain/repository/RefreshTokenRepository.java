@@ -8,5 +8,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     Boolean existsByTokenValue(String tokenValue);
 
+    @Transactional
     void deleteByTokenValue(String tokenValue);
 }
