@@ -50,6 +50,7 @@ public class AuthService {
                 .role("ROLE_USER")
                 .build();
 
+        System.out.println(member.getPassword());
         memberRepository.save(member);
     }
 

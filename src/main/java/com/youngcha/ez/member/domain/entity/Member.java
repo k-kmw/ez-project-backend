@@ -28,7 +28,7 @@ public class Member {
 
     @Column(nullable = false, length = 10, unique = true)
     private String userId;
-    @Column(nullable = false, length = 12)
+    @Column(nullable = false)
     private String password;
     private String role;
 
