@@ -35,7 +35,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+            RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -45,7 +46,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+    public Authentication attemptAuthentication(HttpServletRequest request,
+            HttpServletResponse response) throws AuthenticationException {
 
         String userId = obtainUsername(request);
         String password = obtainPassword(request);
@@ -54,14 +56,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         System.out.println(password);
 
         // username과 password를 검증하기 위해 token에 담기
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, password);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                userId, password);
 
         // 검증을 위해 token을 AuthenticationManager로 전달
         return authenticationManager.authenticate(authToken);
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
+    protected void successfulAuthentication(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain, Authentication authentication)
+            throws IOException {
 
         // 유저 정보
         String userId = authentication.getName();
@@ -99,7 +104,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+    protected void unsuccessfulAuthentication(HttpServletRequest request,
+            HttpServletResponse response, AuthenticationException failed) {
 
         response.setStatus(401);
     }
@@ -107,6 +113,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     Cookie createEncodedCookie(String name, String value) {
         value = URLEncoder.encode(value, StandardCharsets.UTF_8);
         Cookie cookie = new Cookie(name, value);
+        cookie.setMaxAge(24 * 60 * 60);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         return cookie;
