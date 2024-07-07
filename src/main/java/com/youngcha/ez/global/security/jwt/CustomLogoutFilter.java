@@ -92,12 +92,24 @@ public class CustomLogoutFilter extends GenericFilterBean {
         // 로그아웃 진행: DB에서 refresh 토큰 제거
         refreshTokenRepository.deleteByTokenValue(refreshToken);
 
-        // refresh 토큰 cookie 제거
-        Cookie cookie = new Cookie("refresh", null);
+        // 로그인 user에 관한 쿠키 제거
+        deleteLoginUserCookies(response);
+        
+        response.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    private void deleteLoginUserCookies(HttpServletResponse response) {
+
+        deleteCookie("refresh", response);
+        deleteCookie("username", response);
+        deleteCookie("userId", response);
+    }
+
+    private void deleteCookie(String key, HttpServletResponse response) {
+
+        Cookie cookie = new Cookie(key, null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
-
         response.addCookie(cookie);
-        response.setStatus(HttpServletResponse.SC_OK);
     }
 }

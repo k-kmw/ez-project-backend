@@ -12,6 +12,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -86,9 +89,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String loginDTOJson = objectMapper.writeValueAsString(loginDTO);
 
         // 응답 설정
+        response.setCharacterEncoding("UTF-8");
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addCookie(createCookie("refresh", refreshToken));
-        response.addCookie(createCookie("username", loginMember.getUsername()));
+        response.addCookie(createEncodedCookie("refresh", refreshToken));
+        response.addCookie(createEncodedCookie("username", loginMember.getUsername()));
+        response.addCookie(createEncodedCookie("userId", loginMember.getUserId()));
         response.getWriter().write(loginDTOJson);
         response.setStatus(HttpStatus.OK.value());
     }
@@ -99,11 +104,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(401);
     }
 
-    private Cookie createCookie(String key, String value) {
-
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24 * 60 * 60);
-//        cookie.setSecure(true);
+    Cookie createEncodedCookie(String name, String value) {
+        value = URLEncoder.encode(value, StandardCharsets.UTF_8);
+        Cookie cookie = new Cookie(name, value);
+        cookie.setPath("/");
         cookie.setHttpOnly(true);
         return cookie;
     }
