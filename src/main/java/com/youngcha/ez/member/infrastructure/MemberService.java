@@ -4,7 +4,6 @@ import com.youngcha.ez.member.domain.dto.MemberRequest;
 import com.youngcha.ez.member.domain.dto.MemberRequest.UserInfoUpdateDTO;
 import com.youngcha.ez.member.domain.entity.Member;
 import com.youngcha.ez.member.domain.repository.MemberRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,5 +33,10 @@ public class MemberService {
         Member member = memberRepository.findByUserId(userId);
 
         member.updateInfo(updateDTO);
+    }
+
+    public Member findById(String userId) {
+
+        return memberRepository.findByUserId(userId);
     }
 }

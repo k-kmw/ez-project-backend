@@ -5,11 +5,15 @@ import com.youngcha.ez.global.security.domain.entity.RefreshToken;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthRequestDTO;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
+import com.youngcha.ez.member.domain.entity.Member;
+import com.youngcha.ez.member.infrastructure.MemberService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,9 +28,13 @@ import java.util.Date;
 public class AuthController {
 
     private final AuthService authService;
+    private final MemberService memberService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, MemberService memberService, JwtUtil jwtUtil) {
         this.authService = authService;
+        this.memberService = memberService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/join")
@@ -69,9 +77,14 @@ public class AuthController {
         authService.deleteRefreshToken(refreshToken);
         authService.addRefreshToken(newRefreshToken);
 
+        // cookie 갱신을 위해 member 조회
+        Member loginMember = memberService.findById(jwtUtil.getUserId(refreshToken));
+        
         // 응답 설정
         response.setHeader("Authorization", "Bearer " + newAccessToken);
-        response.addCookie(createCookie("refresh", newRefreshToken));
+        response.addCookie(createEncodedCookie("refresh", newRefreshToken));
+        response.addCookie(createEncodedCookie("username", loginMember.getUsername()));
+        response.addCookie(createEncodedCookie("userId", loginMember.getUserId()));
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -91,11 +104,12 @@ public class AuthController {
         return refreshToken;
     }
 
-    private Cookie createCookie(String key, String value) {
+    Cookie createEncodedCookie(String name, String value) {
 
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-//        cookie.setSecure(true);
+        value = URLEncoder.encode(value, StandardCharsets.UTF_8);
+        Cookie cookie = new Cookie(name, value);
+        cookie.setMaxAge(24 * 60 * 60);
+        cookie.setPath("/");
         cookie.setHttpOnly(true);
 
         return cookie;
