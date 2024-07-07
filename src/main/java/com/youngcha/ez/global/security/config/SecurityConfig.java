@@ -5,6 +5,7 @@ import com.youngcha.ez.global.security.jwt.JwtFilter;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.global.security.jwt.LoginFilter;
 import com.youngcha.ez.global.security.jwt.CustomLogoutFilter;
+import com.youngcha.ez.member.domain.repository.MemberRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,11 +30,13 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final MemberRepository memberRepository;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.memberRepository = memberRepository;
     }
 
     @Bean
@@ -95,7 +98,7 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtFilter(jwtUtil),LoginFilter.class);
 
         http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenRepository), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenRepository, memberRepository), UsernamePasswordAuthenticationFilter.class);
 
         http
                 .addFilterAt(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class);
