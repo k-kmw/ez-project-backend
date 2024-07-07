@@ -1,8 +1,13 @@
 package com.youngcha.ez.global.security.jwt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.youngcha.ez.global.security.domain.entity.RefreshToken;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
+import com.youngcha.ez.global.security.dto.AuthResponseDTO;
 import com.youngcha.ez.global.security.dto.MemberDetails;
+import com.youngcha.ez.member.domain.entity.Member;
+import com.youngcha.ez.member.domain.repository.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +20,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -24,11 +30,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final MemberRepository memberRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.memberRepository = memberRepository;
         setFilterProcessesUrl("/user/login");
         setUsernameParameter("userId");
     }
@@ -50,7 +58,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
 
         // 유저 정보
         String userId = authentication.getName();
@@ -61,15 +69,27 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
 
         // token 생성
-        String accessToken = jwtUtil.createJwt("access", userId, role,10*60*1000L);
-        String refreshToken = jwtUtil.createJwt("refresh", userId, role, 24*60*60*1000L);
+        String accessToken = jwtUtil.createJwt("access", userId, role, 10 * 60 * 1000L);
+        String refreshToken = jwtUtil.createJwt("refresh", userId, role, 24 * 60 * 60 * 1000L);
 
         // refresh 토큰 DB 저장
-        addRefreshToken(userId, refreshToken, 24*60*60*1000L);
+        addRefreshToken(userId, refreshToken, 24 * 60 * 60 * 1000L);
+
+        // 로그인 member 조회
+        Member loginMember = memberRepository.findByUserId(userId);
+        AuthResponseDTO.LoginDTO loginDTO = AuthResponseDTO.LoginDTO.builder()
+                .userId(userId)
+                .username(loginMember.getUsername())
+                .email(loginMember.getEmail())
+                .build();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String loginDTOJson = objectMapper.writeValueAsString(loginDTO);
 
         // 응답 설정
-        response.addHeader("Authorization","Bearer " + accessToken);
+        response.addHeader("Authorization", "Bearer " + accessToken);
         response.addCookie(createCookie("refresh", refreshToken));
+        response.addCookie(createCookie("username", loginMember.getUsername()));
+        response.getWriter().write(loginDTOJson);
         response.setStatus(HttpStatus.OK.value());
     }
 
@@ -82,10 +102,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
+        cookie.setMaxAge(24 * 60 * 60);
 //        cookie.setSecure(true);
         cookie.setHttpOnly(true);
-
         return cookie;
     }
 
