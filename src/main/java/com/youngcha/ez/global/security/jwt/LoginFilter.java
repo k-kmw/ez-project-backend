@@ -96,9 +96,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         // 응답 설정
         response.setCharacterEncoding("UTF-8");
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addCookie(createEncodedCookie("refresh", refreshToken));
-        response.addCookie(createEncodedCookie("username", loginMember.getUsername()));
-        response.addCookie(createEncodedCookie("userId", loginMember.getUserId()));
+        response.addCookie(createEncodedCookie(true, "refresh", refreshToken));
+        response.addCookie(createEncodedCookie(false, "username", loginMember.getUsername()));
+        response.addCookie(createEncodedCookie(false, "userId", loginMember.getUserId()));
         response.getWriter().write(loginDTOJson);
         response.setStatus(HttpStatus.OK.value());
     }
@@ -110,12 +110,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(401);
     }
 
-    Cookie createEncodedCookie(String name, String value) {
+    Cookie createEncodedCookie(boolean isHttpOnly, String name, String value) {
         value = URLEncoder.encode(value, StandardCharsets.UTF_8);
         Cookie cookie = new Cookie(name, value);
         cookie.setMaxAge(24 * 60 * 60);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(isHttpOnly);
         return cookie;
     }
 
