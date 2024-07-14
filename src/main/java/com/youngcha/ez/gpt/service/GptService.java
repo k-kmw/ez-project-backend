@@ -1,6 +1,7 @@
 package com.youngcha.ez.gpt.service;
 
 import com.youngcha.ez.gpt.dto.GPT4oRequest;
+import com.youngcha.ez.gpt.dto.GPTResponse;
 import com.youngcha.ez.util.FileUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

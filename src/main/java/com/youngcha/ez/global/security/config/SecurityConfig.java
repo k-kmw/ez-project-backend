@@ -91,6 +91,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/**", "/").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/user/reissue").permitAll()
+                        .requestMatchers("/report/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
