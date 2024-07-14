@@ -76,13 +76,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        // token 생성
-        String accessToken = jwtUtil.createJwt("access", userId, role, 10 * 60 * 1000L);
-        String refreshToken = jwtUtil.createJwt("refresh", userId, role, 24 * 60 * 60 * 1000L);
-
-        // refresh 토큰 DB 저장
-        addRefreshToken(userId, refreshToken, 24 * 60 * 60 * 1000L);
-
         // 로그인 member 조회
         Member loginMember = memberRepository.findByUserId(userId);
         AuthResponseDTO.LoginDTO loginDTO = AuthResponseDTO.LoginDTO.builder()
@@ -92,6 +85,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 .build();
         ObjectMapper objectMapper = new ObjectMapper();
         String loginDTOJson = objectMapper.writeValueAsString(loginDTO);
+
+        // token 생성
+        String accessToken = jwtUtil.createJwt("access", userId, loginMember.getUsername(), role, 10 * 60 * 1000L);
+        String refreshToken = jwtUtil.createJwt("refresh", userId, loginMember.getUsername(), role, 24 * 60 * 60 * 1000L);
+
+        // refresh 토큰 DB 저장
+        addRefreshToken(userId, refreshToken, 24 * 60 * 60 * 1000L);
 
         // 응답 설정
         response.setCharacterEncoding("UTF-8");
