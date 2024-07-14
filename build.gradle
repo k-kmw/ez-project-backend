@@ -42,6 +42,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox
+	implementation group: 'org.apache.pdfbox', name: 'pdfbox', version: '3.0.2'
+	// https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox-tools
+	implementation group: 'org.apache.pdfbox', name: 'pdfbox-tools', version: '3.0.2'
+
 }
 
 tasks.named('test') {
