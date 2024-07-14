@@ -69,16 +69,16 @@ public class AuthController {
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
+        // cookie 갱신을 위해 member 조회
+        Member loginMember = memberService.findById(jwtUtil.getUserId(refreshToken));
+
         // make new JWT
-        String newAccessToken = authService.rotateJwt("access", refreshToken, 10*60*1000L);
-        String newRefreshToken = authService.rotateJwt("refresh", refreshToken, 24*60*60*1000L);
+        String newAccessToken = authService.rotateJwt("access", refreshToken, loginMember.getUsername(), 10*60*1000L);
+        String newRefreshToken = authService.rotateJwt("refresh", refreshToken, loginMember.getUsername(), 24*60*60*1000L);
 
         // DB에 기존 refresh 토큰 삭제 후 새 refresh 토큰 저장
         authService.deleteRefreshToken(refreshToken);
         authService.addRefreshToken(newRefreshToken);
-
-        // cookie 갱신을 위해 member 조회
-        Member loginMember = memberService.findById(jwtUtil.getUserId(refreshToken));
         
         // 응답 설정
         response.setHeader("Authorization", "Bearer " + newAccessToken);
