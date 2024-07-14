@@ -2,10 +2,10 @@ package com.youngcha.ez.gpt.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.prototype.demo.gpt.dto.content.Content;
-import com.prototype.demo.gpt.dto.content.ImageContent;
-import com.prototype.demo.gpt.dto.content.ImageUrl;
-import com.prototype.demo.gpt.dto.content.textContent;
+import com.youngcha.ez.gpt.dto.content.Content;
+import com.youngcha.ez.gpt.dto.content.ImageContent;
+import com.youngcha.ez.gpt.dto.content.ImageUrl;
+import com.youngcha.ez.gpt.dto.content.textContent;
 
 import java.util.ArrayList;
 import java.util.List;

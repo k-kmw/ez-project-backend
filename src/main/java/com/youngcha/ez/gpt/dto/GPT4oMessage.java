@@ -1,6 +1,7 @@
 package com.youngcha.ez.gpt.dto;
 
-import com.prototype.demo.gpt.dto.content.Content;
+
+import com.youngcha.ez.gpt.dto.content.Content;
 
 import java.util.List;
 
