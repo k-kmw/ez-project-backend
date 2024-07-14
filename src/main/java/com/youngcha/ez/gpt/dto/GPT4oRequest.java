@@ -1,4 +1,4 @@
-package com.youngcha.ez.gpt;
+package com.youngcha.ez.gpt.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

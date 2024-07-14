@@ -1,4 +1,4 @@
-package com.youngcha.ez.gpt.content;
+package com.youngcha.ez.gpt.dto.content;
 
 public class ImageUrl {
     private String url;

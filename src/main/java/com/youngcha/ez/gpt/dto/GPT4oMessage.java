@@ -1,4 +1,4 @@
-package com.youngcha.ez.gpt;
+package com.youngcha.ez.gpt.dto;
 
 import com.prototype.demo.gpt.dto.content.Content;
 
