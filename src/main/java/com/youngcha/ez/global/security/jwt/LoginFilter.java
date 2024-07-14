@@ -87,8 +87,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         // 응답 설정
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addCookie(createCookie("refresh", refreshToken));
-        response.addCookie(createCookie("username", loginMember.getUsername()));
+        response.addCookie(createCookie(true, "refresh", refreshToken));
+        response.addCookie(createCookie(false, "username", loginMember.getUsername()));
         response.getWriter().write(loginDTOJson);
         response.setStatus(HttpStatus.OK.value());
     }
@@ -99,12 +99,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(401);
     }
 
-    private Cookie createCookie(String key, String value) {
+    private Cookie createCookie(Boolean isHttpOnly, String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(24 * 60 * 60);
-//        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setHttpOnly(isHttpOnly);
         return cookie;
     }
 
