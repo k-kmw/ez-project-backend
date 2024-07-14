@@ -114,8 +114,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         value = URLEncoder.encode(value, StandardCharsets.UTF_8);
         Cookie cookie = new Cookie(name, value);
         cookie.setMaxAge(24 * 60 * 60);
+        cookie.setDomain("");
         cookie.setPath("/");
         cookie.setHttpOnly(isHttpOnly);
+        cookie.setAttribute("SameSite", "None");
+        cookie.setSecure(true);
         return cookie;
     }
 
