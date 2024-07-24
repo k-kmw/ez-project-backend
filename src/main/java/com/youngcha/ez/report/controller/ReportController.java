@@ -26,16 +26,6 @@ public class ReportController {
         this.analyzer = analyzer;
     }
 
-    @GetMapping("/")
-    public List<Report> findAllReport(){
-        return reportService.findAll();
-    }
-
-    @GetMapping("/{id}")
-    public Report findReportById(@PathVariable(name = "id") Long id){
-        return reportService.findReportById(id);
-    }
-
     @GetMapping("/analyze")
     public ReportDto analyzeReport(){
         List<Report> reports = analyzer.analyzeAllPdf();
@@ -53,6 +43,12 @@ public class ReportController {
     @GetMapping("/list")
     public List<ReportDto> findReportUsingPaging(@PageableDefault(size = 8) Pageable pageable, @RequestParam(value = "searchWord", required = false)String searchWord){
         return reportService.findReportBySearchWord(pageable, searchWord);
+    }
+
+    @GetMapping("/view/{reportId}")
+    public ReportDto findReportDetail(@PathVariable(name = "reportId")Long reportId){
+        System.out.println("reportId = " + reportId);
+        return reportService.findReportById(reportId);
     }
 
     @GetMapping("/temp")
