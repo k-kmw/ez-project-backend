@@ -1,15 +1,9 @@
 package com.youngcha.ez.report.service;
 
-import com.youngcha.ez.report.dto.Context;
-import com.youngcha.ez.report.dto.Report;
-import com.youngcha.ez.report.dto.ReportConverter;
-import com.youngcha.ez.report.dto.ReportDto;
+import com.youngcha.ez.report.dto.*;
 import com.youngcha.ez.report.repository.ContextRepository;
 import com.youngcha.ez.report.repository.ReportRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,9 +20,20 @@ public class ReportService {
         this.contextRepository = contextRepository;
     }
 
-    public Report findReportById(Long id) {
-        Optional<Report> report = reportRepository.findById(id);
-        return report.get();
+    public ReportDto findReportById(Long id) {
+        Optional<Report> findReport = reportRepository.findById(id);
+        System.out.println("findReport = " + findReport.isPresent());
+
+        if(findReport.isPresent()){
+            Report report = findReport.get();
+            ReportDto reportDto = ReportConverter.reportToReportDto(report);
+            List<ContextDto> contextDtoList = ReportConverter.contextListToContextDtoList(report.getContextList());
+            reportDto.updateContextList(contextDtoList);
+            return reportDto;
+        }
+        else{
+            return new ReportDto();
+        }
     }
 
     public List<Report> findAll() {
