@@ -17,4 +17,8 @@ public class ReportDto{
     private String opinion;
     private String targetPrice;
     private List<ContextDto> contextList;
+
+    public void updateContextList(List<ContextDto> list){
+        this.contextList = list;
+    }
 }
