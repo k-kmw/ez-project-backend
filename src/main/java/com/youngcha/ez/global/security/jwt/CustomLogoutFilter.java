@@ -1,5 +1,6 @@
 package com.youngcha.ez.global.security.jwt;
 
+import com.youngcha.ez.global.error.ErrorCode;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -60,7 +61,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
         // refresh null check
         if (refreshToken == null) {
 
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.REFRESH_TOKEN_NOT_FOUND);
             return;
         }
 
@@ -69,7 +70,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
             jwtUtil.isExpired(refreshToken);
         } catch (ExpiredJwtException e) {
 
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.REFRESH_TOKEN_EXPIRED);
             return;
         }
 
@@ -77,7 +78,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
         String type = jwtUtil.getType(refreshToken);
         if (!type.equals("refresh")) {
 
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.INVALID_REFRESH_TOKEN);
             return;
         }
         
@@ -85,7 +86,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
         Boolean isExist = refreshTokenRepository.existsByTokenValue(refreshToken);
         if (!isExist) {
 
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.INVALID_REFRESH_TOKEN);
             return;
         }
 

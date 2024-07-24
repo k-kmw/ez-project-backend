@@ -9,9 +9,13 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     // Auth
-    TOKEN_NOT_FOUND("Access token is missing.", HttpStatus.UNAUTHORIZED),
-    TOKEN_EXPIRED("Access token expired.", HttpStatus.UNAUTHORIZED),
-    INVALID_ACCESS_TOKEN("Invalid access token.", HttpStatus.UNAUTHORIZED);
+    ACCESS_TOKEN_NOT_FOUND("Access token을 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED),
+    ACCESS_TOKEN_EXPIRED("Access token이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
+    INVALID_ACCESS_TOKEN("유효하지 않은 Access Token입니다.", HttpStatus.UNAUTHORIZED),
+
+    REFRESH_TOKEN_NOT_FOUND("Refresh token을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_EXPIRED("Refresh token이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
+    INVALID_REFRESH_TOKEN("유효하지 않은 Refresh Token입니다.", HttpStatus.UNAUTHORIZED);
 
     private final String message;
     private final HttpStatus httpStatus;

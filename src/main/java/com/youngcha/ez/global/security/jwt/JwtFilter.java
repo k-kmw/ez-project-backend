@@ -52,7 +52,7 @@ public class JwtFilter extends OncePerRequestFilter {
             jwtUtil.isExpired(accessToken);
         } catch (ExpiredJwtException e) {
 
-            handleException(response, ErrorCode.TOKEN_EXPIRED); // Token expired
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.ACCESS_TOKEN_EXPIRED); // Token expired
             return;
         }
 
@@ -60,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String type = jwtUtil.getType(accessToken);
         if (!type.equals("access")) {
 
-            handleException(response, ErrorCode.INVALID_ACCESS_TOKEN); // Invalid access token
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.INVALID_ACCESS_TOKEN); // Invalid access token
             return;
         }
 
@@ -79,14 +79,5 @@ public class JwtFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
-    }
-
-    private void handleException(HttpServletResponse response, ErrorCode errorCode)
-        throws IOException {
-        response.setStatus(errorCode.getHttpStatus().value());
-        response.setContentType("application/json");
-        PrintWriter writer = response.getWriter();
-        writer.print("{\"error\": \"" + errorCode.getMessage() + "\"}");
-        writer.flush();
     }
 }
