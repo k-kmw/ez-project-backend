@@ -5,12 +5,14 @@ import com.youngcha.ez.report.dto.Context;
 import com.youngcha.ez.report.dto.Report;
 import com.youngcha.ez.util.FileUtil;
 import com.youngcha.ez.util.ImageConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Slf4j
 public class Analyzer {
 
     private final GptService gptService;
@@ -35,18 +37,24 @@ public class Analyzer {
         targetPrice = targetPrice.replace("]","");
 
         int idx = targetPrice.indexOf(",");
-        if(idx == -1){
-            System.out.println("can't find , " + targetPrice);
-        }
-
         String opinion = targetPrice.substring(0,idx);
         targetPrice = targetPrice.substring(idx+1,targetPrice.length());
+        if(idx == -1){
+            System.out.println("can't find , " + targetPrice);
+            targetPrice = "없음";
+        }
+        else{
+            opinion = "없음";
+            targetPrice = "없음";
+        }
+
+
 
 
         // 3. 기업 이름 추출
-        String title = gptService.getTitle(pdfName);
-        title = title.replace("[","");
-        title = title.replace("]","");
+        String name = gptService.getTitle(pdfName);
+        name = name.replace("[","");
+        name = name.replace("]","");
 
         // 4. 콘텐츠 요약 parse 필요
         String summary = gptService.getResponseByGPT4();
@@ -55,7 +63,13 @@ public class Analyzer {
         // 콘텐츠 parse 필요
         List<Context> contexts = new ArrayList<>();
 
-        Report report = new Report(title, opinion, targetPrice, contexts);
+        Report report = Report.builder()
+                .name(name)
+                .opinion(opinion)
+                .targetPrice(targetPrice)
+                .contextList(contexts)
+                .build();
+
 
         for(String string : st){
             if(string == null) continue;
@@ -67,15 +81,17 @@ public class Analyzer {
 
             int i = string.indexOf(",");
             if(i == -1){
-                System.out.println("can't find , " + string);
+                log.debug("can't find {}",string);
                 continue;
             }
-            String contextHeader = string.substring(0,i);
-            String contextBody = string.substring(i+1,string.length());
-            System.out.println("contextHeader = " + contextHeader);
-            System.out.println("contextBody = " + contextBody);
+            String title = string.substring(0,i);
+            String content = string.substring(i+1,string.length());
 
-            Context context = new Context(contextHeader, contextBody, report);
+            Context context = Context.builder()
+                                    .title(title)
+                                    .content(content)
+                                    .report(report)
+                                    .build();
             report.addContext(context);
         }
 
