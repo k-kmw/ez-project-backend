@@ -1,9 +1,17 @@
 package com.youngcha.ez.report.dto;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "context")
+@Builder
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Context {
 
     @Id
@@ -16,31 +24,11 @@ public class Context {
     @Column(length = 25565)
     private String content;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reportId")
     private Report report;
 
-    public Context(String title, String content, Report report) {
-        this.title = title;
-        this.content = content;
-        this.report = report;
-    }
 
-    public Long getContextId() {
-        return contextId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public Report getReport() {
-        return report;
-    }
 }
 
 
