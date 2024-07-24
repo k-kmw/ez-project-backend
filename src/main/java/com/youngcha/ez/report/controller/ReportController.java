@@ -6,10 +6,10 @@ import com.youngcha.ez.report.dto.Report;
 import com.youngcha.ez.report.dto.ReportDto;
 import com.youngcha.ez.report.service.Analyzer;
 import com.youngcha.ez.report.service.ReportService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +48,11 @@ public class ReportController {
 
         ReportDto reportDto = new ReportDto(report.getReportId(),report.getName(),report.getOpinion(),report.getTargetPrice(),contextDtoList);
         return reportDto;
+    }
+
+    @GetMapping("/list")
+    public List<ReportDto> findReportUsingPaging(@PageableDefault(size = 8) Pageable pageable, @RequestParam(value = "searchWord", required = false)String searchWord){
+        return reportService.findReportBySearchWord(pageable, searchWord);
     }
 
     @GetMapping("/temp")
