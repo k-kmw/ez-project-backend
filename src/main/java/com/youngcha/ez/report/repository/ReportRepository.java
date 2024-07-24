@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report,Long> {
 
-    public List<Report> findByNameContaining(Pageable pageable,String name);
+    List<Report> findByNameContaining(Pageable pageable,String name);
 
 }
