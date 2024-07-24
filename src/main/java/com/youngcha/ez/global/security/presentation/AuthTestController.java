@@ -29,4 +29,11 @@ public class AuthTestController {
 
         return "ok " + userId + " " + role;
     }
+
+    @GetMapping("/")
+    @ResponseBody
+    public String rootWithoutAccessToken() {
+
+        return "ok ";
+    }
 }

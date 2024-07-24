@@ -3,13 +3,12 @@ package com.youngcha.ez.global.security.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-
 public class AuthRequestDTO {
 
     @Data
-    @RequiredArgsConstructor
+    @Builder
     public static class JoinDTO {
 
         @NotBlank(message = "이름을 입력해주세요.")
