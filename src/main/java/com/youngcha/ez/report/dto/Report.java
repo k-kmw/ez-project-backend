@@ -17,10 +17,13 @@ import java.util.List;
 public class Report {
 
     @Id @GeneratedValue
-    private long reportId;
+    private Long reportId;
 
     @Column
     private String name; // 기업이름
+
+    @Column
+    private String title; // 보고서 제목
 
     @Column
     private String opinion; // 투자 의견 매수/매도

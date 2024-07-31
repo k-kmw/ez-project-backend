@@ -3,6 +3,8 @@ package com.youngcha.ez.report.service;
 import com.youngcha.ez.report.dto.*;
 import com.youngcha.ez.report.repository.ContextRepository;
 import com.youngcha.ez.report.repository.ReportRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -10,19 +12,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ReportService {
 
     private final ReportRepository reportRepository;
-    private final ContextRepository contextRepository;
-
-    public ReportService(ReportRepository reportRepository, ContextRepository contextRepository) {
-        this.reportRepository = reportRepository;
-        this.contextRepository = contextRepository;
-    }
 
     public ReportDto findReportById(Long id) {
         Optional<Report> findReport = reportRepository.findById(id);
-        System.out.println("findReport = " + findReport.isPresent());
 
         if(findReport.isPresent()){
             Report report = findReport.get();
@@ -36,23 +32,18 @@ public class ReportService {
         }
     }
 
-    public List<Report> findAll() {
-        return reportRepository.findAll();
+    public List<ReportDto> findAll(Pageable pageable) {
+        List<Report> reports = reportRepository.findAll(pageable).toList();
+        return ReportConverter.reportListToReportDtoList(reports);
     }
 
-    public List<ReportDto> findReportBySearchWord(Pageable pageable, String name){
-        // 검색어 없을 때 null 처리
-        if(name == null){
-            name = "";
-        }
-        return ReportConverter.reportListToReportDtoList(reportRepository.findAll(pageable).toList());
+    public List<ReportDto> findByName(Pageable pageable, String name){
+        return ReportConverter.reportListToReportDtoList(reportRepository.findByName(pageable,name));
     }
 
-    public void save(Report report){
-        reportRepository.save(report);
-        for(Context context : report.getContextList()){
-            contextRepository.save(context);
-        }
+    public ReportDto save(Report report){
+        Report save = reportRepository.save(report);
+        return ReportConverter.reportToReportDto(save);
     }
 
 

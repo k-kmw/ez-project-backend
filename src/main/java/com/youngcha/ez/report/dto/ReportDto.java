@@ -14,6 +14,7 @@ import java.util.List;
 public class ReportDto{
     private long reportId;
     private String name;
+    private String title;
     private String opinion;
     private String targetPrice;
     private List<ContextDto> contextList;

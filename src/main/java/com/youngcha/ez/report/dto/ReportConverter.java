@@ -10,6 +10,7 @@ public class ReportConverter {
         return ReportDto.builder()
                 .reportId(report.getReportId())
                 .name(report.getName())
+                .title(report.getTitle())
                 .opinion(report.getOpinion())
                 .targetPrice(report.getTargetPrice())
                 .contextList(new ArrayList<ContextDto>())
