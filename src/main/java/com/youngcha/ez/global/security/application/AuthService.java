@@ -1,5 +1,7 @@
 package com.youngcha.ez.global.security.application;
 
+import com.youngcha.ez.global.error.ErrorCode;
+import com.youngcha.ez.global.error.exception.BusinessException;
 import com.youngcha.ez.global.security.domain.entity.RefreshToken;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthRequestDTO;
@@ -22,7 +24,9 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthService(MemberRepository memberRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
+    public AuthService(MemberRepository memberRepository,
+        BCryptPasswordEncoder bCryptPasswordEncoder, JwtUtil jwtUtil,
+        RefreshTokenRepository refreshTokenRepository) {
         this.memberRepository = memberRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtUtil = jwtUtil;
@@ -34,21 +38,22 @@ public class AuthService {
 
         boolean isExist = memberRepository.existsByUserId(joinDTO.getUserId());
 
-        if(isExist) { // TODO: 이미 가입된 회원일 경우 예외 처리
-            return;
+        if (isExist) {
+            throw new BusinessException(joinDTO.getUserId(), "userId", ErrorCode.ALREADY_EXIST_ID);
         }
 
-        if(!joinDTO.getPassword().equals(joinDTO.getPasswordCheck())) { // TODO: 비밀번호와 비밀번호 확인이 다를 경우 예외 처리
-            return;
+        if (!joinDTO.getPassword().equals(joinDTO.getPasswordCheck())) {
+            throw new BusinessException(joinDTO.getPasswordCheck(), "password",
+                ErrorCode.CONFIRM_PASSWORD_MISMATCH);
         }
 
         Member member = Member.builder()
-                .userId(joinDTO.getUserId())
-                .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
-                .username(joinDTO.getUsername())
-                .email(joinDTO.getEmail())
-                .role("ROLE_USER")
-                .build();
+            .userId(joinDTO.getUserId())
+            .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
+            .username(joinDTO.getUsername())
+            .email(joinDTO.getEmail())
+            .role("ROLE_USER")
+            .build();
 
         System.out.println(member.getPassword());
         memberRepository.save(member);
@@ -94,13 +99,13 @@ public class AuthService {
     public void addRefreshToken(String token) {
 
         String userId = jwtUtil.getUserId(token);
-        Date expirationDate = new Date(System.currentTimeMillis() + 24*60*60*1000L);
+        Date expirationDate = new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000L);
 
         RefreshToken refreshToken = RefreshToken.builder()
-                .userId(userId)
-                .tokenValue(token)
-                .expiration(expirationDate.toString())
-                .build();
+            .userId(userId)
+            .tokenValue(token)
+            .expiration(expirationDate.toString())
+            .build();
 
         refreshTokenRepository.save(refreshToken);
     }
