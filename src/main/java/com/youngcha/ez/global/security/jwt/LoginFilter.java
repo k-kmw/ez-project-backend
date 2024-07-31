@@ -3,6 +3,7 @@ package com.youngcha.ez.global.security.jwt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.youngcha.ez.global.error.ErrorCode;
+import com.youngcha.ez.global.error.exception.BusinessException;
 import com.youngcha.ez.global.security.domain.entity.RefreshToken;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthResponseDTO;
@@ -23,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
@@ -68,7 +70,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 userId, password);
 
         // 검증을 위해 token을 AuthenticationManager로 전달
-        return authenticationManager.authenticate(authToken);
+        try {
+            return authenticationManager.authenticate(authToken);
+        } catch (RuntimeException e) {
+            try {
+                CustomFilterExceptionHandler.handleException(response, ErrorCode.USER_NOT_FOUND);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        return null;
     }
 
     @Override

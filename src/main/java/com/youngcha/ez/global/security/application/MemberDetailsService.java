@@ -1,6 +1,9 @@
 package com.youngcha.ez.global.security.application;
 
+import com.youngcha.ez.global.error.ErrorCode;
+import com.youngcha.ez.global.error.exception.BusinessException;
 import com.youngcha.ez.global.security.dto.MemberDetails;
+import com.youngcha.ez.global.security.jwt.CustomFilterExceptionHandler;
 import com.youngcha.ez.member.domain.entity.Member;
 import com.youngcha.ez.member.domain.repository.MemberRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,13 +22,12 @@ public class MemberDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String userId) {
 
         Member member = memberRepository.findByUserId(userId);
 
-        if(member == null) { // TODO: id에 해당하는 멤버가 없으면 403 예외 처리
-            System.out.println("일치하는 id를 조회할 수 없습니다.");
-            return null;
+        if(member == null) {
+            throw new RuntimeException("user를 찾을 수 없습니다. userId: " + userId);
         }
 
         return new MemberDetails(member);
