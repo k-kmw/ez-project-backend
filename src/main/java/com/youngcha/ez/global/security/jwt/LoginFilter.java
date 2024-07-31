@@ -2,6 +2,7 @@ package com.youngcha.ez.global.security.jwt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.youngcha.ez.global.error.ErrorCode;
 import com.youngcha.ez.global.security.domain.entity.RefreshToken;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthResponseDTO;
@@ -17,6 +18,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -48,6 +50,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
             HttpServletResponse response) throws AuthenticationException {
+
+        if (!"POST".equals(request.getMethod())) {
+            try {
+                CustomFilterExceptionHandler.handleException(response, ErrorCode.METHOD_NOT_ALLOWED);
+                return null;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         String userId = obtainUsername(request);
         String password = obtainPassword(request);

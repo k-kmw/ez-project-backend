@@ -11,6 +11,7 @@ public class CustomFilterExceptionHandler {
         throws IOException {
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         PrintWriter writer = response.getWriter();
         writer.print("{\"error\": \"" + errorCode.getMessage() + "\"}");
         writer.flush();

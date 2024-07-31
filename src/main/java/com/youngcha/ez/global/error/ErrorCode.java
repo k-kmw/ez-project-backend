@@ -15,7 +15,9 @@ public enum ErrorCode {
 
     REFRESH_TOKEN_NOT_FOUND("Refresh token을 찾을 수 없습니다.", HttpStatus.BAD_REQUEST),
     REFRESH_TOKEN_EXPIRED("Refresh token이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
-    INVALID_REFRESH_TOKEN("유효하지 않은 Refresh Token입니다.", HttpStatus.UNAUTHORIZED);
+    INVALID_REFRESH_TOKEN("유효하지 않은 Refresh Token입니다.", HttpStatus.UNAUTHORIZED),
+
+    METHOD_NOT_ALLOWED("허용되지 않은 Method 입니다.", HttpStatus.METHOD_NOT_ALLOWED);
 
     private final String message;
     private final HttpStatus httpStatus;
