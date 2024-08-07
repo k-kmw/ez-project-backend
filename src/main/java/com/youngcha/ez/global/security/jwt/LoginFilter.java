@@ -76,13 +76,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        // token 생성
-        String accessToken = jwtUtil.createJwt("access", userId, role, 10 * 60 * 1000L);
-        String refreshToken = jwtUtil.createJwt("refresh", userId, role, 24 * 60 * 60 * 1000L);
-
-        // refresh 토큰 DB 저장
-        addRefreshToken(userId, refreshToken, 24 * 60 * 60 * 1000L);
-
         // 로그인 member 조회
         Member loginMember = memberRepository.findByUserId(userId);
         AuthResponseDTO.LoginDTO loginDTO = AuthResponseDTO.LoginDTO.builder()
@@ -93,12 +86,19 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         ObjectMapper objectMapper = new ObjectMapper();
         String loginDTOJson = objectMapper.writeValueAsString(loginDTO);
 
+        // token 생성
+        String accessToken = jwtUtil.createJwt("access", userId, loginMember.getUsername(), role, 10 * 60 * 1000L);
+        String refreshToken = jwtUtil.createJwt("refresh", userId, loginMember.getUsername(), role, 24 * 60 * 60 * 1000L);
+
+        // refresh 토큰 DB 저장
+        addRefreshToken(userId, refreshToken, 24 * 60 * 60 * 1000L);
+
         // 응답 설정
         response.setCharacterEncoding("UTF-8");
         response.addHeader("Authorization", "Bearer " + accessToken);
-        response.addCookie(createEncodedCookie("refresh", refreshToken));
-        response.addCookie(createEncodedCookie("username", loginMember.getUsername()));
-        response.addCookie(createEncodedCookie("userId", loginMember.getUserId()));
+        response.addCookie(createEncodedCookie(true, "refresh", refreshToken));
+        response.addCookie(createEncodedCookie(false, "username", loginMember.getUsername()));
+        response.addCookie(createEncodedCookie(false, "userId", loginMember.getUserId()));
         response.getWriter().write(loginDTOJson);
         response.setStatus(HttpStatus.OK.value());
     }
@@ -110,12 +110,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(401);
     }
 
-    Cookie createEncodedCookie(String name, String value) {
+    Cookie createEncodedCookie(boolean isHttpOnly, String name, String value) {
         value = URLEncoder.encode(value, StandardCharsets.UTF_8);
         Cookie cookie = new Cookie(name, value);
         cookie.setMaxAge(24 * 60 * 60);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(isHttpOnly);
         return cookie;
     }
 

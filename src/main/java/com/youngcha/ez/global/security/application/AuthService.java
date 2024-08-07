@@ -76,12 +76,12 @@ public class AuthService {
         return refreshTokenRepository.existsByTokenValue(refreshToken);
     }
 
-    public String rotateJwt(String type, String refreshToken, Long expiredMs) {
+    public String rotateJwt(String type, String refreshToken, String username, Long expiredMs) {
 
         String userId = jwtUtil.getUserId(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
 
-        return jwtUtil.createJwt(type, userId, role, expiredMs);
+        return jwtUtil.createJwt(type, userId, username, role, expiredMs);
     }
 
     @Transactional

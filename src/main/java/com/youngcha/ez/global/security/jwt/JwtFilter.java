@@ -1,5 +1,6 @@
 package com.youngcha.ez.global.security.jwt;
 
+import com.youngcha.ez.global.error.ErrorCode;
 import com.youngcha.ez.global.security.dto.MemberDetails;
 import com.youngcha.ez.member.domain.entity.Member;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -26,13 +27,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+        FilterChain filterChain) throws ServletException, IOException {
 
         String authorization = request.getHeader("Authorization");
 
-        if(authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
 
-            System.out.println("access token이 존재하지 않음");
             filterChain.doFilter(request, response);
 
             return;
@@ -40,7 +41,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String accessToken = authorization.split(" ")[1];
 
-        if(accessToken == null) {
+        if (accessToken == null) {
+
             filterChain.doFilter(request, response);
 
             return;
@@ -50,21 +52,15 @@ public class JwtFilter extends OncePerRequestFilter {
             jwtUtil.isExpired(accessToken);
         } catch (ExpiredJwtException e) {
 
-            PrintWriter writer = response.getWriter();
-            writer.print("access token expired");
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.ACCESS_TOKEN_EXPIRED); // Token expired
             return;
         }
-        
+
         // access token인지 확인
         String type = jwtUtil.getType(accessToken);
-        if(!type.equals("access")) {
+        if (!type.equals("access")) {
 
-            PrintWriter writer = response.getWriter();
-            writer.print("Invalid access token");
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            CustomFilterExceptionHandler.handleException(response, ErrorCode.INVALID_ACCESS_TOKEN); // Invalid access token
             return;
         }
 
@@ -72,15 +68,16 @@ public class JwtFilter extends OncePerRequestFilter {
         String role = jwtUtil.getRole(accessToken);
 
         Member member = Member.builder()
-                .userId(userId)
-                .password("temppassword")
-                .role(role)
-                .build();
+            .userId(userId)
+            .password("temppassword")
+            .role(role)
+            .build();
         MemberDetails memberDetails = new MemberDetails(member);
 
-        Authentication authToken  = new UsernamePasswordAuthenticationToken(memberDetails, null, memberDetails.getAuthorities());
+        Authentication authToken = new UsernamePasswordAuthenticationToken(memberDetails, null,
+            memberDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
     }
 }

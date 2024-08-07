@@ -1,6 +1,7 @@
 package com.youngcha.ez.global.security.config;
 
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
+import com.youngcha.ez.global.security.jwt.CustomAuthenticationEntryPoint;
 import com.youngcha.ez.global.security.jwt.JwtFilter;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.global.security.jwt.LoginFilter;
@@ -28,19 +29,24 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository) {
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+        JwtUtil jwtUtil,
+        RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository) {
         this.authenticationConfiguration = authenticationConfiguration;
+        this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
         this.jwtUtil = jwtUtil;
         this.refreshTokenRepository = refreshTokenRepository;
         this.memberRepository = memberRepository;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+        throws Exception {
 
         return configuration.getAuthenticationManager();
     }
@@ -48,7 +54,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "https://ec2-43-201-127-225.ap-northeast-2.compute.amazonaws.com:8080"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173",
+            "https://ec2-43-201-127-225.ap-northeast-2.compute.amazonaws.com:8080"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -68,45 +75,50 @@ public class SecurityConfig {
 
         // cors disable
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         // csrf disable
         http
-                .csrf((auth) -> auth.disable());
+            .csrf((auth) -> auth.disable());
 
         // Form 로그인 방식 disable
         http
-                .formLogin((auth) -> auth.disable());
+            .formLogin((auth) -> auth.disable());
 
         // http basic 인증 방식 disable
         http
-                .httpBasic((auth) -> auth.disable());
+            .httpBasic((auth) -> auth.disable());
 
         http
-                .logout((auth) -> auth.disable());
+            .logout((auth) -> auth.disable());
 
         // 경로별 인가 작업
         http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/user/**", "/").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
-                        .requestMatchers("/user/reissue").permitAll()
-                        .anyRequest().authenticated()
-                );
+            .authorizeRequests(auth -> auth
+                .requestMatchers("/", "/user/login", "/user/join").permitAll() // 인증 없이 접근 허용
+                .anyRequest().authenticated() // 다른 모든 요청은 인증 필요
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(customAuthenticationEntryPoint)
+            );
 
         http
-                .addFilterBefore(new JwtFilter(jwtUtil),LoginFilter.class);
+            .addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
 
         http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenRepository, memberRepository), UsernamePasswordAuthenticationFilter.class);
+            .addFilterAt(
+                new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil,
+                    refreshTokenRepository, memberRepository),
+                UsernamePasswordAuthenticationFilter.class);
 
         http
-                .addFilterAt(new CustomLogoutFilter(jwtUtil, refreshTokenRepository), LogoutFilter.class);
+            .addFilterAt(new CustomLogoutFilter(jwtUtil, refreshTokenRepository),
+                LogoutFilter.class);
 
         // 세션 설정 (jwt 방식에서는 session을 stateless로 설정)
         http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .sessionManagement((session) -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
