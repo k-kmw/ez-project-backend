@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/report")
+@RequestMapping("/reports")
 @RequiredArgsConstructor
 public class ReportController {
 
     private final ReportService reportService;
 
-    @GetMapping("/list")
+    @GetMapping()
     public ResponseEntity<List<ReportDto>> findReportUsingPaging(@PageableDefault(size = 8) Pageable pageable, @RequestParam(value = "searchKeyword", required = false)String searchWord){
         if(searchWord == null || searchWord.isEmpty()){
             return ResponseEntity.status(HttpStatus.OK).body(reportService.findAll(pageable));
@@ -28,7 +28,7 @@ public class ReportController {
         }
     }
 
-    @GetMapping("/view/{reportId}")
+    @GetMapping("/{reportId}")
     public ResponseEntity<ReportDto> findReportDetail(@PathVariable(name = "reportId")Long reportId){
         return ResponseEntity.status(HttpStatus.OK).body(reportService.findReportById(reportId));
     }

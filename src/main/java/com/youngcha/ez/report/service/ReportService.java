@@ -22,10 +22,7 @@ public class ReportService {
 
         if(findReport.isPresent()){
             Report report = findReport.get();
-            ReportDto reportDto = ReportConverter.reportToReportDto(report);
-            List<ContextDto> contextDtoList = ReportConverter.contextListToContextDtoList(report.getContextList());
-            reportDto.updateContextList(contextDtoList);
-            return reportDto;
+            return ReportConverter.reportToReportDtoWithContextList(report);
         }
         else{
             return new ReportDto();

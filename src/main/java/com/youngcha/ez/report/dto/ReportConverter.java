@@ -6,7 +6,6 @@ import java.util.List;
 public class ReportConverter {
 
     public static ReportDto reportToReportDto(Report report){
-
         return ReportDto.builder()
                 .reportId(report.getReportId())
                 .name(report.getName())
@@ -14,6 +13,17 @@ public class ReportConverter {
                 .opinion(report.getOpinion())
                 .targetPrice(report.getTargetPrice())
                 .contextList(new ArrayList<ContextDto>())
+                .build();
+    }
+
+    public static ReportDto reportToReportDtoWithContextList(Report report){
+        return ReportDto.builder()
+                .reportId(report.getReportId())
+                .name(report.getName())
+                .title(report.getTitle())
+                .opinion(report.getOpinion())
+                .targetPrice(report.getTargetPrice())
+                .contextList(contextListToContextDtoList(report.getContextList()))
                 .build();
     }
 
