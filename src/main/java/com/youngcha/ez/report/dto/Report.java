@@ -1,18 +1,29 @@
 package com.youngcha.ez.report.dto;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Entity
 @Table(name = "report")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Getter
 public class Report {
 
     @Id @GeneratedValue
-    private long reportId;
+    private Long reportId;
 
     @Column
     private String name; // 기업이름
+
+    @Column
+    private String title; // 보고서 제목
 
     @Column
     private String opinion; // 투자 의견 매수/매도
@@ -20,36 +31,8 @@ public class Report {
     @Column
     private String targetPrice; // 목표 주가
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id")
+    @OneToMany(mappedBy = "report", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Context> contextList;// 문단 리스트
-
-    public Report(String name, String opinion, String targetPrice, List<Context> contextList) {
-        this.name = name;
-        this.opinion = opinion;
-        this.targetPrice = targetPrice;
-        this.contextList = contextList;
-    }
-
-    public long getReportId() {
-        return reportId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getOpinion() {
-        return opinion;
-    }
-
-    public String getTargetPrice() {
-        return targetPrice;
-    }
-
-    public List<Context> getContextList() {
-        return contextList;
-    }
 
     public void addContext(Context context){
         this.contextList.add(context);
