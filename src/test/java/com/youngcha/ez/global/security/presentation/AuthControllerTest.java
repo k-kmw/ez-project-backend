@@ -7,6 +7,7 @@ import com.youngcha.ez.global.security.dto.AuthRequestDTO.JoinDTO;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.member.domain.entity.Member;
 import com.youngcha.ez.member.infrastructure.MemberService;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -55,11 +56,10 @@ public class AuthControllerTest {
             .email("test@naver.com")
             .username("hong")
             .build();
-        // populate joinDTO with necessary fields
 
         mockMvc.perform(post("/user/join")
                 .contentType("application/json")
-                .content(objectMapper.writeValueAsBytes(joinDTO)))
+                .content(objectMapper.writeValueAsString(joinDTO)))
             .andExpect(status().isOk());
 
         verify(authService, times(1)).join(any(AuthRequestDTO.JoinDTO.class));
@@ -72,14 +72,16 @@ public class AuthControllerTest {
         String newRefreshToken = "new-refresh-token";
         String username = "testUser";
         String userId = "testUserId";
+        String email = "email@gmail.com";
+        String password = "password";
 
         Member member = Member.builder()
-            .id(1)
             .userId(userId)
             .username(username)
+            .email(email)
+            .password(password)
             .build();
 
-        // Setup mocks
         when(authService.isTokenExpired(anyString())).thenReturn(false);
         when(authService.isRefreshToken(anyString())).thenReturn(true);
         when(authService.isTokenInDB(anyString())).thenReturn(true);
@@ -105,9 +107,8 @@ public class AuthControllerTest {
         verify(authService, times(1)).addRefreshToken(newRefreshToken);
     }
 
-
     @Test
-    public void ReissueFailureInvalidTokenTest() throws Exception {
+    public void ReissueFailureExpiredTokenTest() throws Exception {
         String refreshToken = "invalid-refresh-token";
 
         when(authService.isTokenExpired(anyString())).thenReturn(true);
