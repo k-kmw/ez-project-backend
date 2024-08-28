@@ -17,7 +17,7 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
 
-    public ReportDto findReportById(Long id) {
+    public ReportDto findReportDtoById(Long id) {
         Optional<Report> findReport = reportRepository.findById(id);
 
         if(findReport.isPresent()){
@@ -26,6 +26,17 @@ public class ReportService {
         }
         else{
             return new ReportDto();
+        }
+    }
+
+    public Report findReportById(Long id) {
+        Optional<Report> findReport = reportRepository.findById(id);
+
+        if(findReport.isPresent()){
+            return findReport.get();
+        }
+        else{
+            return null;
         }
     }
 

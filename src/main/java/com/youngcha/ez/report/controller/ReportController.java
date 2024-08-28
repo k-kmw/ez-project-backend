@@ -30,6 +30,7 @@ public class ReportController {
 
     @GetMapping("/{reportId}")
     public ResponseEntity<ReportDto> findReportDetail(@PathVariable(name = "reportId")Long reportId){
-        return ResponseEntity.status(HttpStatus.OK).body(reportService.findReportById(reportId));
+        return ResponseEntity.status(HttpStatus.OK).body(reportService.findReportDtoById(reportId));
     }
+
 }
