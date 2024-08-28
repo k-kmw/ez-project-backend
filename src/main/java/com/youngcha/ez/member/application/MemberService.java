@@ -1,4 +1,4 @@
-package com.youngcha.ez.member.infrastructure;
+package com.youngcha.ez.member.application;
 
 import com.youngcha.ez.member.domain.dto.MemberRequest;
 import com.youngcha.ez.member.domain.dto.MemberRequest.UserInfoUpdateDTO;

@@ -1,8 +1,7 @@
 package com.youngcha.ez.member.presentation;
 
 import com.youngcha.ez.member.domain.dto.MemberRequest;
-import com.youngcha.ez.member.domain.entity.Member;
-import com.youngcha.ez.member.infrastructure.MemberService;
+import com.youngcha.ez.member.application.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,13 +1,10 @@
 package com.youngcha.ez.global.security.presentation;
 
 import com.youngcha.ez.global.security.application.AuthService;
-import com.youngcha.ez.global.security.domain.entity.RefreshToken;
-import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthRequestDTO;
 import com.youngcha.ez.global.security.jwt.JwtUtil;
 import com.youngcha.ez.member.domain.entity.Member;
-import com.youngcha.ez.member.infrastructure.MemberService;
-import io.jsonwebtoken.ExpiredJwtException;
+import com.youngcha.ez.member.application.MemberService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,8 +17,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import java.util.Date;
 
 @Controller
 @RequestMapping("/user")
