@@ -31,6 +31,7 @@ public class Member {
     @Column(nullable = false)
     private String password;
     private String role;
+    private String profileImageUrl;
 
     public void updateInfo(UserInfoUpdateDTO updateDTO) throws Exception {
 
