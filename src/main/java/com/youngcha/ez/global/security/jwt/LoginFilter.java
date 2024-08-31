@@ -2,6 +2,8 @@ package com.youngcha.ez.global.security.jwt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.youngcha.ez.global.error.ErrorCode;
+import com.youngcha.ez.global.error.exception.BusinessException;
 import com.youngcha.ez.global.security.domain.entity.RefreshToken;
 import com.youngcha.ez.global.security.domain.repository.RefreshTokenRepository;
 import com.youngcha.ez.global.security.dto.AuthResponseDTO;
@@ -17,10 +19,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
@@ -49,18 +53,34 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request,
             HttpServletResponse response) throws AuthenticationException {
 
+        if (!"POST".equals(request.getMethod())) {
+            try {
+                CustomFilterExceptionHandler.handleException(response, ErrorCode.METHOD_NOT_ALLOWED);
+                return null;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         String userId = obtainUsername(request);
         String password = obtainPassword(request);
-
-        System.out.println(userId);
-        System.out.println(password);
 
         // username과 password를 검증하기 위해 token에 담기
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userId, password);
 
         // 검증을 위해 token을 AuthenticationManager로 전달
-        return authenticationManager.authenticate(authToken);
+        try {
+            return authenticationManager.authenticate(authToken);
+        } catch (RuntimeException e) {
+            try {
+                CustomFilterExceptionHandler.handleException(response, ErrorCode.USER_NOT_FOUND);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        return null;
     }
 
     @Override
